@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/JwtAuthenticationApi.Api/JwtAuthenticationApi.Api.csproj" />
+    <Project Path="src/JwtAuthenticationApi.Application/JwtAuthenticationApi.Application.csproj" />
+    <Project Path="src/JwtAuthenticationApi.Domain/JwtAuthenticationApi.Domain.csproj" />
+    <Project Path="src/JwtAuthenticationApi.Infrastructure/JwtAuthenticationApi.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/JwtAuthenticationApi.Tests/JwtAuthenticationApi.Tests.csproj" />
+  </Folder>
+</Solution>

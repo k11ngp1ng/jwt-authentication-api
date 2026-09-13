@@ -1,0 +1,29 @@
+@baseUrl = https://localhost:7035
+@accessToken = paste-access-token-here
+
+### Register a user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "demo_user",
+  "email": "demo@example.com",
+  "password": "StrongPassword@123"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "demo@example.com",
+  "password": "StrongPassword@123"
+}
+
+### Authenticated user endpoint
+GET {{baseUrl}}/api/protected/user
+Authorization: Bearer {{accessToken}}
+
+### Administrator-only endpoint
+GET {{baseUrl}}/api/protected/admin
+Authorization: Bearer {{accessToken}}
