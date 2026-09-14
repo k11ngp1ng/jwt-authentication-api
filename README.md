@@ -1,25 +1,28 @@
 # JWT Authentication API
 
-API RESTful de autenticação e autorização baseada em JWT, construída com C#,
-ASP.NET Core e .NET 10. O projeto demonstra separação de responsabilidades,
-persistência com SQLite, hash seguro de senhas e autorização baseada em papéis.
+A RESTful authentication and authorization API built with **C#, ASP.NET Core, and .NET 10**, using **JSON Web Tokens (JWT)**.
 
-## Funcionalidades
+This project demonstrates secure authentication practices, separation of concerns, role-based authorization, SQLite persistence, password hashing, automated testing, and a clean layered architecture.
 
-- Registro de usuários com validação de entrada.
-- Hash de senha com BCrypt Enhanced, SHA-384 e work factor 12.
-- Login com retorno de access token JWT.
-- Claims de ID, username, e-mail e papel.
-- Autorização com [Authorize] e [Authorize(Roles = "Admin")].
-- Persistência com Entity Framework Core e SQLite.
-- Migrações aplicadas automaticamente na inicialização.
-- Respostas de erro padronizadas com RFC 7807 ProblemDetails.
-- OpenAPI/Swagger com autenticação Bearer.
-- Testes unitários e de integração HTTP.
+## Features
 
-## Arquitetura
+- User registration with input validation
+- Secure password hashing using BCrypt Enhanced with SHA-384 and work factor 12
+- User authentication with JWT access tokens
+- JWT claims for user ID, username, email, and role
+- Authentication using `[Authorize]`
+- Role-based authorization using `[Authorize(Roles = "Admin")]`
+- Entity Framework Core with SQLite persistence
+- Automatic database migration on application startup
+- Standardized error responses using RFC 7807 `ProblemDetails`
+- OpenAPI/Swagger documentation with Bearer authentication
+- Unit and HTTP integration tests
 
-~~~text
+## Architecture
+
+The project follows a layered architecture with clear separation of responsibilities:
+
+```text
 src/
 ├── JwtAuthenticationApi.Api
 │   ├── Controllers
@@ -41,59 +44,83 @@ tests/
 └── JwtAuthenticationApi.Tests
     ├── Unit
     └── Integration
-~~~
+```
 
-Dependências entre camadas:
+### Layer Dependencies
 
-~~~text
+```text
 Api ───────────► Application
  │                    │
  └──► Infrastructure  └──► Domain
           │
           └───────────────► Domain
-~~~
+```
 
-## Tecnologias
+The **Domain** layer contains the core business entities and enums.
 
-- .NET 10 e ASP.NET Core
+The **Application** layer contains application logic, DTOs, interfaces, services, and application-specific exceptions.
+
+The **Infrastructure** layer implements persistence, repositories, and authentication-related services.
+
+The **API** layer exposes HTTP endpoints and handles incoming requests, authentication, authorization, and middleware.
+
+## Tech Stack
+
+- .NET 10
+- ASP.NET Core
 - Entity Framework Core 10
 - SQLite
 - JWT Bearer Authentication
 - BCrypt.Net-Next
-- Swashbuckle/OpenAPI
+- Swashbuckle / OpenAPI
 - xUnit
 
-## Pré-requisitos
+## Prerequisites
 
-- [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0)
+Make sure the following tools are installed:
+
+- .NET 10 SDK
 - Git
-- Certificado HTTPS de desenvolvimento confiável:
 
-~~~powershell
+Trust the ASP.NET Core HTTPS development certificate:
+
+```powershell
 dotnet dev-certs https --trust
-~~~
+```
 
-## Configuração
+## Configuration
 
-Restaure as dependências e ferramentas locais:
+Restore the project dependencies and local tools:
 
-~~~powershell
+```powershell
 dotnet restore
 dotnet tool restore
-~~~
+```
 
-A chave JWT nunca deve ser armazenada no repositório. Para desenvolvimento,
-gere uma chave aleatória e salve-a no .NET User Secrets:
+### JWT Secret
 
-~~~powershell
-$jwtSecret = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(64))
-dotnet user-secrets set "Jwt:SecretKey" $jwtSecret --project .\src\JwtAuthenticationApi.Api
-~~~
+The JWT signing key should **never be stored in the repository**.
 
-As demais configurações estão em
-src/JwtAuthenticationApi.Api/appsettings.json:
+For local development, generate a cryptographically secure random key and store it using .NET User Secrets:
 
-~~~json
+```powershell
+$jwtSecret = [Convert]::ToBase64String(
+    [Security.Cryptography.RandomNumberGenerator]::GetBytes(64)
+)
+
+dotnet user-secrets set "Jwt:SecretKey" $jwtSecret `
+    --project .\src\JwtAuthenticationApi.Api
+```
+
+The remaining configuration is defined in:
+
+```text
+src/JwtAuthenticationApi.Api/appsettings.json
+```
+
+Example:
+
+```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Data Source=jwt-auth.db"
@@ -105,46 +132,52 @@ src/JwtAuthenticationApi.Api/appsettings.json:
     "ExpirationMinutes": 60
   }
 }
-~~~
+```
 
-Em produção, forneça Jwt__SecretKey por variável de ambiente ou por um
-gerenciador de segredos.
+For production environments, provide `Jwt__SecretKey` through an environment variable or a secure secrets management service.
 
-## Executando
+## Running the Application
 
-~~~powershell
+Start the API using:
+
+```powershell
 dotnet run --project .\src\JwtAuthenticationApi.Api --launch-profile https
-~~~
+```
 
-A interface Swagger estará disponível em:
+Swagger UI will be available at:
 
-~~~text
+```text
 https://localhost:7035/swagger
-~~~
+```
 
-O arquivo SQLite e as tabelas são criados automaticamente. Para aplicar
-migrações manualmente:
+The SQLite database and its tables are automatically created when the application starts.
 
-~~~powershell
-dotnet ef database update --project .\src\JwtAuthenticationApi.Infrastructure --startup-project .\src\JwtAuthenticationApi.Api
-~~~
+To apply Entity Framework Core migrations manually:
 
-## Endpoints
+```powershell
+dotnet ef database update `
+    --project .\src\JwtAuthenticationApi.Infrastructure `
+    --startup-project .\src\JwtAuthenticationApi.Api
+```
 
-| Método | Endpoint | Autorização | Descrição |
+## API Endpoints
+
+| Method | Endpoint | Authorization | Description |
 |---|---|---|---|
-| POST | /api/auth/register | Público | Registra usuário e retorna JWT |
-| POST | /api/auth/login | Público | Autentica usuário e retorna JWT |
-| GET | /api/protected/user | Bearer | Acesso para usuário autenticado |
-| GET | /api/protected/admin | Papel Admin | Acesso administrativo |
+| `POST` | `/api/auth/register` | Public | Registers a new user and returns a JWT |
+| `POST` | `/api/auth/login` | Public | Authenticates a user and returns a JWT |
+| `GET` | `/api/protected/user` | Bearer Token | Accessible to authenticated users |
+| `GET` | `/api/protected/admin` | Admin Role | Accessible only to administrators |
 
-Novos registros recebem sempre o papel User. A promoção para Admin deve
-ser feita por um processo administrativo confiável, nunca pelo endpoint
-público de registro.
+Newly registered users are always assigned the `User` role.
 
-### Registro
+Promotion to the `Admin` role should only be performed through a trusted administrative process and must never be exposed through the public registration endpoint.
 
-~~~http
+## Usage Examples
+
+### Register a User
+
+```http
 POST /api/auth/register
 Content-Type: application/json
 
@@ -153,11 +186,11 @@ Content-Type: application/json
   "email": "demo@example.com",
   "password": "StrongPassword@123"
 }
-~~~
+```
 
 ### Login
 
-~~~http
+```http
 POST /api/auth/login
 Content-Type: application/json
 
@@ -165,66 +198,100 @@ Content-Type: application/json
   "email": "demo@example.com",
   "password": "StrongPassword@123"
 }
-~~~
+```
 
-Resposta:
+Example response:
 
-~~~json
+```json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIs...",
   "tokenType": "Bearer",
   "expiresAtUtc": "2026-09-13T19:00:00+00:00"
 }
-~~~
+```
 
-Use o token nas rotas protegidas:
+Use the returned access token when accessing protected endpoints:
 
-~~~http
+```http
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
-~~~
+```
 
-Uma coleção pronta está disponível em
-[requests/JwtAuthenticationApi.http](requests/JwtAuthenticationApi.http).
+A ready-to-use HTTP request collection is available at:
 
-## Validação de entrada
+```text
+requests/JwtAuthenticationApi.http
+```
 
-O registro exige:
+## Input Validation
 
-- Username entre 3 e 50 caracteres, usando letras, números ou _.
-- E-mail válido com no máximo 254 caracteres.
-- Senha entre 8 e 128 caracteres.
-- Senha contendo letra maiúscula, minúscula, número e caractere especial.
+User registration requires:
 
-Credenciais inválidas retornam uma mensagem genérica para evitar revelar se
-um e-mail está cadastrado.
+- Username between 3 and 50 characters
+- Username containing only letters, numbers, or underscores (`_`)
+- Valid email address with a maximum length of 254 characters
+- Password between 8 and 128 characters
+- Password containing at least:
+  - one uppercase letter
+  - one lowercase letter
+  - one number
+  - one special character
 
-## Testes
+Invalid credentials return a generic authentication error to prevent revealing whether a specific email address is registered.
 
-~~~powershell
+## Testing
+
+Run the complete test suite with:
+
+```powershell
 dotnet test --configuration Release
-~~~
+```
 
-A suíte cobre:
+The test suite covers:
 
-- Validação dos DTOs.
-- Geração e claims do JWT.
-- Hash e verificação BCrypt.
-- Serviços de registro e login.
-- Repositório usando SQLite real em memória.
-- Controllers e metadados de autorização.
-- Fluxo HTTP completo, incluindo respostas 401, 403 e 409.
+- DTO validation
+- JWT generation and claims
+- BCrypt password hashing and verification
+- Registration and authentication services
+- Repository behavior using a real in-memory SQLite database
+- Controllers and authorization metadata
+- Complete HTTP authentication flows
+- HTTP `401 Unauthorized` responses
+- HTTP `403 Forbidden` responses
+- HTTP `409 Conflict` responses
 
-## Segurança
+## Security
 
-- Senhas nunca são persistidas em texto puro.
-- A chave JWT fica fora do código-fonte.
-- Tokens validam assinatura, emissor, audiência e expiração.
-- O tempo de tolerância de expiração (ClockSkew) é zero.
-- E-mail e username possuem índices únicos no banco.
-- O registro público não permite escolher o papel do usuário.
-- Erros internos não expõem stack traces ao cliente.
+The project implements several security practices:
 
-## Licença
+- Passwords are never stored in plain text
+- Passwords are hashed using BCrypt Enhanced with SHA-384
+- JWT signing keys are kept outside the source code
+- Tokens validate signature, issuer, audience, and expiration
+- JWT expiration tolerance (`ClockSkew`) is set to zero
+- Email addresses and usernames have unique database indexes
+- Public registration cannot assign privileged roles
+- Authentication errors do not reveal whether an account exists
+- Internal errors do not expose stack traces to API clients
+- Administrative access is protected through role-based authorization
 
-Este projeto não possui uma licença definida. Consulte o proprietário antes
-de reutilizar ou redistribuir o código.
+## Project Goals
+
+This project was created to demonstrate practical implementation of:
+
+- RESTful API design
+- JWT authentication
+- Role-based authorization
+- Secure password storage
+- Layered application architecture
+- Dependency injection
+- Entity Framework Core
+- Database persistence
+- API documentation
+- Automated testing
+- Security-oriented backend development
+
+## License
+
+This project currently does not include a license.
+
+Unless a license is added, the source code should not be assumed to be available for unrestricted reuse or redistribution.
